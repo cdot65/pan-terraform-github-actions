@@ -1,67 +1,70 @@
-# PAN-OS provisioning with GitHub Actions
+# Firewall Configuration Automation 🛡️🔧
 
-This repository contains a GitHub Action that can be used to provision PAN-OS devices with configuration files.
+This project automates the deployment and configuration of firewalls using Terraform and a custom Go binary, `firewall-commit`.
 
-## Usage
+## Table of Contents
 
-The action can be used in a workflow file like this:
+- [Firewall Configuration Automation 🛡️🔧](#firewall-configuration-automation-️)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Configuration](#configuration)
+    - [Usage](#usage)
+  - [Terraform Configuration Files](#terraform-configuration-files)
 
-```yaml
-name: Provision PAN-OS
-```
+## Overview
 
-```yaml
-on: [push]
-```
+This project is designed to automate the deployment and configuration of firewalls. It uses Terraform to configure the firewalls and a custom Go binary, `firewall-commit`, to commit the changes. The project is integrated with GitHub Actions for seamless deployment, using self-hosted runners and GitHub repository Secrets to manage sensitive data.
 
-## Example workflow
+## Getting Started
 
-```yaml
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v1
-    - name: Provision PAN-OS
-      uses: PaloAltoNetworks/panos-github-actions@master
-      with:
-        ip: ${{ secrets.PANOS_IP }}
-        username: ${{ secrets.PANOS_USERNAME }}
-        password: ${{ secrets.PANOS_PASSWORD }}
-        config: config.xml
-```
+### Prerequisites
 
-## Project Structure
+Before you get started, ensure you have the following installed on your system:
 
-The project is structured as follows:
+- [Go](https://golang.org/dl/) (1.17 or later)
+- [Terraform](https://www.terraform.io/downloads.html) (1.1.0 or later)
+- Git
 
-```bash
-project_root/
-  ├── .github/
-  │   └── workflows/
-  │       └── terraform.yml
-  ├── auth-files/
-  │   ├── auth-dal-vfw-01.json
-  │   ├── auth-hou-vfw-01.json
-  │   └── auth-san-vfw-01.json
-  ├── environments/
-  │   ├── dal-vfw-01/
-  │   │   ├── main.tf
-  │   │   └── terraform.tfvars
-  │   ├── hou-vfw-01/
-  │   │   ├── main.tf
-  │   │   └── terraform.tfvars
-  │   └── san-vfw-01/
-  │       ├── main.tf
-  │       └── terraform.tfvars
-  ├── modules/
-  │   └── firewall/
-  │       ├── main.tf
-  │       ├── null_resource.tf
-  │       ├── outputs.tf
-  │       ├── panos_provider.tf
-  │       └── variables.tf
-  └── scripts/
-      ├── firewall-commit.go
-      └── go.mod
-```
+### Configuration
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/yourusername/firewall-config-automation.git
+    cd firewall-config-automation
+    ```
+
+2. Set up your firewall credentials as GitHub Secrets in your repository:
+
+- Go to your repository's "Settings" tab.
+- Click on "Secrets" in the left sidebar.
+- Click on the "New repository secret" button.
+- Add two secrets: `PANOS_USERNAME` and `PANOS_PASSWORD`, with the appropriate values.
+
+### Usage
+
+1. Update the Terraform configuration files in the `san-vfw-01` directory as needed. See [Terraform Configuration Files](#terraform-configuration-files) for details.
+
+2. Push changes to the `main` branch:
+
+    ```bash
+    git add .
+    git commit -m "Update firewall configurations"
+    git push
+    ```
+
+3. The GitHub Actions workflow will automatically deploy the changes, commit the configurations, and destroy the resources.
+
+## Terraform Configuration Files
+
+This project uses the following Terraform configuration files:
+
+- `main.tf`: The main configuration file that contains the provider configuration and resources to deploy.
+- `variables.tf`: Contains input variable definitions used in the project.
+- `outputs.tf`: Contains output variable definitions to display useful information after Terraform runs.
+
+Update these files as needed to configure your firewall deployment.
+
+---
