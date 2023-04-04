@@ -1,38 +1,57 @@
-name: "Terraform"
+name: Deploy Firewall Configurations
 
 on:
   push:
     branches:
       - main
-  pull_request:
 
 jobs:
-  terraform:
-    runs-on: ubuntu-latest
-
+  deploy:
+    runs-on: self-hosted
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
 
-      - name: Terraform Initialize
-        run: terraform init
+      - name: Build firewall-commit binary
+        run: |
+          cd scripts
+          go build -o firewall-commit firewall-commit.go
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.1.0
+
+      - name: Terraform Init
+        run: terraform init san-vfw-01/
 
       - name: Terraform Validate
-        run: terraform validate
+        run: terraform validate san-vfw-01/
 
-      - name: Terraform Plan
-        if: github.event_name == 'pull_request'
-        run: terraform plan -out=plan.out
+      - name: Set Firewall Credentials from Secrets
+        run: |
+          echo 'PANOS_USERNAME=${{ secrets.PANOS_USERNAME }}' >> san-vfw-01/.env
+          echo 'PANOS_PASSWORD=${{ secrets.PANOS_PASSWORD }}' >> san-vfw-01/.env
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
+        working-directory: san-vfw-01/
         run: terraform apply -auto-approve
+        env:
+          PANOS_USERNAME: ${{ secrets.PANOS_USERNAME }}
+          PANOS_PASSWORD: ${{ secrets.PANOS_PASSWORD }}
 
-    env:
-      TF_VAR_hostname: ${{ secrets.PANOS_HOSTNAME }}
-      TF_VAR_username: ${{ secrets.PANOS_USERNAME }}
-      TF_VAR_password: ${{ secrets.PANOS_PASSWORD }}
-      # Add other required environment variables here
+      - name: Commit Firewall Configurations
+        run: ./scripts/firewall-commit -auth san-vfw-01/auth.json
+
+      - name: Terraform Destroy
+        if: always()
+        working-directory: san-vfw-01/
+        run: terraform destroy -auto-approve
+        env:
+          PANOS_USERNAME: ${{ secrets.PANOS_USERNAME }}
+          PANOS_PASSWORD: ${{ secrets.PANOS_PASSWORD }}
