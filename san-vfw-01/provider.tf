@@ -9,9 +9,3 @@ terraform {
     }
   }
 }
-
-provider "panos" {
-}
-
-provider "local" {
-}
