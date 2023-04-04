@@ -20,6 +20,8 @@ jobs:
       - name: Build firewall-commit binary
         run: |
           cd scripts
+          go mod init github.com/cdot65/pan-terraform-github-actions
+          go mod tidy
           go build -o firewall-commit firewall-commit.go
 
       - name: Set up Terraform
