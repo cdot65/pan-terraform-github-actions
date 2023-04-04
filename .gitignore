@@ -1,0 +1,5 @@
+.chatgpt/*
+auth-files/*.json
+scripts/firewall-commit
+scripts/go.sum
+scripts/go.mod
