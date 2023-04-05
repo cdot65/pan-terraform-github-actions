@@ -61,6 +61,8 @@ jobs:
         env:
           TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Print config_diff.txt
         run: |
