@@ -12,22 +12,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 16
-
-      - name: Build firewall-commit binary
-        run: |
-          cd scripts
-          go mod init github.com/cdot65/pan-terraform-github-actions
-          go mod tidy
-          go build -o firewall-commit firewall-commit.go
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
