@@ -43,17 +43,12 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Set Firewall Credentials from Secrets
-        run: |
-          echo 'PANOS_USERNAME=${{ secrets.PANOS_USERNAME }}' >> san-vfw-01/.env
-          echo 'PANOS_PASSWORD=${{ secrets.PANOS_PASSWORD }}' >> san-vfw-01/.env
-
       - name: Terraform Apply
         working-directory: san-vfw-01/
         run: terraform apply -auto-approve
         env:
-          PANOS_USERNAME: ${{ secrets.PANOS_USERNAME }}
-          PANOS_PASSWORD: ${{ secrets.PANOS_PASSWORD }}
+          TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
+          TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
 
       - name: Commit Firewall Configurations
         run: ./scripts/firewall-commit -auth san-vfw-01/auth.json
