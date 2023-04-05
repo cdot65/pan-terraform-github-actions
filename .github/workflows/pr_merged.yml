@@ -58,16 +58,18 @@ jobs:
 
       - name: Post Plan Result as Comment
         run: |
-          COMMENT="Terraform Plan completed with the following result:\n\`\`\`\n$(cat apply_output.txt)\n\`\`\`"
-          PR_COMMENTS_URL=$(cat $GITHUB_EVENT_PATH | jq -r .pull_request.comments_url)
+          PR_COMMENT="```
+          $(cat config_diff.txt)
+          ```"
+          PR_ID=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
           curl \
             -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"body\": \"$COMMENT\"}" \
-            $PR_COMMENTS_URL
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_ID/comments \
+            -d "{\"body\": \"$PR_COMMENT\"}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
 
       - name: Commit Firewall Configurations
         run: ./scripts/firewall-commit -auth san-vfw-01/auth.json
