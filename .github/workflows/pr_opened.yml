@@ -41,7 +41,11 @@ jobs:
         run: |
           cd san-vfw-01
           terraform init -backend-config="bucket=${{ secrets.BACKEND_BUCKET }}"
-          terraform workspace new san-vfw-01
+          if ! terraform workspace list | grep -q 'san-vfw-01'; then
+            terraform workspace new san-vfw-01
+          else
+            terraform workspace select san-vfw-01
+          fi
 
       - name: Terraform Validate
         run: terraform validate
@@ -55,6 +59,10 @@ jobs:
         env:
           TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
+
+      - name: Print config_diff.txt
+        run: |
+          cat config_diff.txt
 
       - name: Upload config_diff.txt
         uses: actions/upload-artifact@v2
