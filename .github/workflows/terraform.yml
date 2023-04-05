@@ -1,7 +1,7 @@
-name: Deploy Firewall Configurations
+name: Deploy Firewall configurations to production
 
 on:
-  push:
+  pull_request:
     branches:
       - main
 
@@ -21,6 +21,9 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: 18
+
+      - name: Install jq
+        run: sudo apt-get install jq
 
       - name: Build firewall-commit binary
         run: |
@@ -45,10 +48,24 @@ jobs:
 
       - name: Terraform Apply
         working-directory: san-vfw-01/
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve | tee apply_output.txt
         env:
           TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
+
+      - name: Post Apply Result as Comment
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          COMMENT="Terraform Apply completed with the following result:\n\`\`\`\n$(cat apply_output.txt)\n\`\`\`"
+          PR_COMMENTS_URL=$(cat $GITHUB_EVENT_PATH | jq -r .pull_request.comments_url)
+          curl \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"body\": \"$COMMENT\"}" \
+            $PR_COMMENTS_URL
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit Firewall Configurations
         run: ./scripts/firewall-commit -auth san-vfw-01/auth.json
