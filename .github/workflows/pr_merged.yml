@@ -52,9 +52,6 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Terraform state update
-        run: terraform state pull
-
       - name: Terraform Apply
         working-directory: san-vfw-01/
         run: terraform apply -auto-approve | sed 's/\x1b\[[0-9;]*m//g' | tee config_diff.txt

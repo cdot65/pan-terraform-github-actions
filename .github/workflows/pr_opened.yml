@@ -38,9 +38,6 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Terraform state update
-        run: terraform state pull
-
       - name: Terraform Plan
         working-directory: san-vfw-01/
         run: terraform plan | sed 's/\x1b\[[0-9;]*m//g' | tee config_diff.txt
