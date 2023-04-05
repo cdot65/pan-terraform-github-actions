@@ -1,12 +1,15 @@
-name: Deploy Firewall configurations to production
+name: Deploy Firewall configurations to production (PR merged)
 
 on:
   pull_request:
     branches:
       - main
+    types:
+      - closed
 
 jobs:
   deploy:
+    if: github.event.pull_request.merged == true
     runs-on: self-hosted
     steps:
       - name: Checkout repository
@@ -53,10 +56,9 @@ jobs:
           TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
 
-      - name: Post Apply Result as Comment
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: Post Plan Result as Comment
         run: |
-          COMMENT="Terraform Apply completed with the following result:\n\`\`\`\n$(cat apply_output.txt)\n\`\`\`"
+          COMMENT="Terraform Plan completed with the following result:\n\`\`\`\n$(cat apply_output.txt)\n\`\`\`"
           PR_COMMENTS_URL=$(cat $GITHUB_EVENT_PATH | jq -r .pull_request.comments_url)
           curl \
             -X POST \

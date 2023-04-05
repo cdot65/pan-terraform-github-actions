@@ -1,0 +1,67 @@
+name: Diff proposed configuration changes (PR opened)
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18
+
+      - name: Install jq
+        run: sudo apt-get install jq
+
+      - name: Build firewall-commit binary
+        run: |
+          cd scripts
+          go mod init github.com/cdot65/pan-terraform-github-actions
+          go mod tidy
+          go build -o firewall-commit firewall-commit.go
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.1.0
+
+      - name: Terraform Init
+        run: |
+          cd san-vfw-01
+          terraform workspace new san-vfw-01
+          terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: san-vfw-01/
+        run: terraform plan | tee config_diff.txt
+        env:
+          TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
+          TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
+
+      - name: Post Plan Result as Comment
+        run: |
+          COMMENT="Terraform Plan completed with the following result:\n\`\`\`\n$(cat config_diff.txt)\n\`\`\`"
+          PR_COMMENTS_URL=$(cat $GITHUB_EVENT_PATH | jq -r .pull_request.comments_url)
+          curl \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"body\": \"$COMMENT\"}" \
+            $PR_COMMENTS_URL
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
