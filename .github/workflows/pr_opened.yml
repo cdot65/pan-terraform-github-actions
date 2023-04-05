@@ -38,7 +38,7 @@ jobs:
         run: |
           cd san-vfw-01
           terraform workspace new san-vfw-01
-          terraform init
+          terraform init -backend-config="bucket=${{ secrets.BACKEND_BUCKET }}"
 
       - name: Terraform Validate
         run: terraform validate
