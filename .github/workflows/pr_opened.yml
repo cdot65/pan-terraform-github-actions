@@ -56,7 +56,7 @@ jobs:
       - name: Post Plan Result as Comment
         run: |
           PR_COMMENT="```
-          $(cat config_diff.txt)
+          $(cat san-vfw-01/config_diff.txt)
           ```"
           PR_ID=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
           curl \
