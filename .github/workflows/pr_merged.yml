@@ -56,20 +56,16 @@ jobs:
           TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
 
-      - name: Post Plan Result as Comment
-        run: |
-          PR_COMMENT="```
-          $(cat config_diff.txt)
-          ```"
-          PR_ID=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
-          curl \
-            -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_ID/comments \
-            -d "{\"body\": \"$PR_COMMENT\"}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+      - uses: actions/github-script@v5
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '👋 Testing within Actions!'
+            })
 
       - name: Commit Firewall Configurations
         run: ./scripts/firewall-commit -auth san-vfw-01/auth.json
