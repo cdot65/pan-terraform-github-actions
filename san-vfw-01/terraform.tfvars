@@ -17,7 +17,7 @@ eth_interfaces = [
     vsys          = "vsys1"
     dhcp          = false
     default_route = false
-    ips           = ["192.168.31.1/24"]
+    ips           = ["192.168.32.1/24"]
   },
   {
     name          = "ethernet1/3"
