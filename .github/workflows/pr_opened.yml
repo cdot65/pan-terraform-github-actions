@@ -52,6 +52,7 @@ jobs:
 
       - name: Post Plan Result as Comment
         run: |
+          unset TERRAFORM_CLI_PATH
           PR_COMMENT="```
           $(cat san-vfw-01/config_diff.txt)
           ```"
