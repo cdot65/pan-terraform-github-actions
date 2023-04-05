@@ -64,7 +64,7 @@ jobs:
 
       - name: Print config_diff.txt
         run: |
-          cat config_diff.txt
+          cat san-vfw-01/config_diff.txt
 
       - name: Upload config_diff.txt
         uses: actions/upload-artifact@v2
