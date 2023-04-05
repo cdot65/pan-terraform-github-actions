@@ -70,14 +70,20 @@ jobs:
           path: san-vfw-01/
 
       - name: Post Plan Result as Comment
-        run: |
-          PR_COMMENT="```
-          $(cat san-vfw-01/config_diff.txt)
-          ```"
-          PR_ID=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
-          curl \
-            -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: token ${{ secrets.PAT }}" \
-            https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_ID/comments \
-            -d "{\"body\": \"$PR_COMMENT\"}"
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const config_diff = fs.readFileSync(path.join(process.env.GITHUB_WORKSPACE, 'san-vfw-01', 'config_diff.txt'), 'utf8');
+            const pr_id = context.issue.number;
+            const comment_body = `\`\`\`
+                ${config_diff}
+            \`\`\``;
+            await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr_id,
+                body: comment_body
+            });
+            github-token: ${{ secrets.PAT }}
