@@ -22,9 +22,6 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install jq
-        run: sudo apt-get install jq
-
       - name: Build firewall-commit binary
         run: |
           cd scripts
