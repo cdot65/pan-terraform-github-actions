@@ -86,4 +86,4 @@ jobs:
                 issue_number: pr_id,
                 body: comment_body
             });
-            github-token: ${{ secrets.PAT }}
+          github-token: ${{ secrets.PAT }}
