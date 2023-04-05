@@ -51,8 +51,8 @@ jobs:
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
 
       - name: Post Plan Result as Comment
+        shell: sh
         run: |
-          unset TERRAFORM_CLI_PATH
           PR_COMMENT="```
           $(cat san-vfw-01/config_diff.txt)
           ```"
