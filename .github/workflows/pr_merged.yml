@@ -1,15 +1,12 @@
-name: Deploy Firewall configurations to production (PR merged)
+name: Diff proposed configuration changes (PR opened)
 
 on:
   pull_request:
     branches:
       - main
-    types:
-      - closed
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true
     runs-on: self-hosted
     steps:
       - name: Checkout repository
@@ -21,12 +18,9 @@ jobs:
           go-version: 1.17
 
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 18
-
-      - name: Install jq
-        run: sudo apt-get install jq
 
       - name: Build firewall-commit binary
         run: |
@@ -49,25 +43,53 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
+      - name: Terraform state update
+        run: terraform state pull
+
       - name: Terraform Apply
         working-directory: san-vfw-01/
-        run: terraform apply -auto-approve | tee apply_output.txt
+        run: terraform apply -auto-approve | | sed 's/\x1b\[[0-9;]*m//g' > config_diff.txt
         env:
           TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
 
-      - name: Post Plan Result as Comment
-        run: |
-          COMMENT="Terraform Plan completed with the following result:\n\`\`\`\n$(cat apply_output.txt)\n\`\`\`"
-          PR_COMMENTS_URL=$(cat $GITHUB_EVENT_PATH | jq -r .pull_request.comments_url)
-          curl \
-            -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"body\": \"$COMMENT\"}" \
-            $PR_COMMENTS_URL
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload config_diff.txt
+        uses: actions/upload-artifact@v2
+        with:
+          name: config_diff
+          path: san-vfw-01/config_diff.txt
 
       - name: Commit Firewall Configurations
         run: ./scripts/firewall-commit -auth san-vfw-01/auth.json
+
+  post_plan_comment:
+    runs-on: self-hosted
+    needs: deploy
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download config_diff.txt
+        uses: actions/download-artifact@v2
+        with:
+          name: config_diff
+          path: san-vfw-01/
+
+      - name: Post Plan Result as Comment
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const config_diff = fs.readFileSync(path.join(process.env.GITHUB_WORKSPACE, 'san-vfw-01', 'config_diff.txt'), 'utf8');
+            const pr_id = context.issue.number;
+            const comment_body = `\`\`\`
+                ${config_diff}
+            \`\`\``;
+            await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr_id,
+                body: comment_body
+            });
+          github-token: ${{ secrets.PAT }}
