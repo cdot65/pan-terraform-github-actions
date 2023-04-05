@@ -18,7 +18,7 @@ jobs:
           go-version: 1.17
 
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 18
 
@@ -50,12 +50,24 @@ jobs:
           TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
 
+      - name: Upload config_diff.txt
+        uses: actions/upload-artifact@v2
+        with:
+          name: config_diff
+          path: san-vfw-01/config_diff.txt
+
   post_plan_comment:
     runs-on: self-hosted
     needs: deploy
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Download config_diff.txt
+        uses: actions/download-artifact@v2
+        with:
+          name: config_diff
+          path: san-vfw-01/
 
       - name: Post Plan Result as Comment
         run: |
