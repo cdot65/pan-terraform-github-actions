@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - main
+    types:
+      - closed
 
 jobs:
   deploy:
@@ -48,7 +50,7 @@ jobs:
 
       - name: Terraform Apply
         working-directory: san-vfw-01/
-        run: terraform apply -auto-approve | | sed 's/\x1b\[[0-9;]*m//g' > config_diff.txt
+        run: terraform apply -auto-approve | sed 's/\x1b\[[0-9;]*m//g' > config_diff.txt
         env:
           TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
