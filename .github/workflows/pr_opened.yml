@@ -40,7 +40,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: san-vfw-01/
-        run: terraform plan | sed 's/\x1b\[[0-9;]*m//g' | tee config_diff.txt
+        run: terraform plan | tee config_diff.txt
         env:
           TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
