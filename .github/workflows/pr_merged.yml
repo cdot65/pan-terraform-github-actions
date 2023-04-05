@@ -41,6 +41,9 @@ jobs:
           cd san-vfw-01
           terraform workspace new san-vfw-01
           terraform init
+        env:
+          TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Terraform Validate
         run: terraform validate
