@@ -50,8 +50,14 @@ jobs:
           TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
 
+  post_plan_comment:
+    runs-on: self-hosted
+    needs: deploy
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Post Plan Result as Comment
-        shell: sh
         run: |
           PR_COMMENT="```
           $(cat san-vfw-01/config_diff.txt)
