@@ -1,4 +1,4 @@
-name: Diff proposed configuration changes (PR opened)
+name: Proposed configuration changes (PR opened)
 
 on:
   pull_request:
@@ -55,7 +55,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: san-vfw-01/
-        run: terraform plan | sed 's/\x1b\[[0-9;]*m//g' > config_diff.txt
+        run: timeout 600 terraform plan | sed 's/\x1b\[[0-9;]*m//g' | tee config_diff.txt
         env:
           TF_VAR_panos_username: ${{ secrets.PANOS_USERNAME }}
           TF_VAR_panos_password: ${{ secrets.PANOS_PASSWORD }}
